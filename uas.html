@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fayla Syifa Rustam</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Jost:wght@200;300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080608;
+  --bg2: #0e0b0d;
+  --bg3: #141014;
+  --gold: #c9a84c;
+  --gold2: #e8c97a;
+  --rose: #a0485a;
+  --rose2: #c9697e;
+  --text: #e8e0dc;
+  --muted: #7a6f72;
+  --border: rgba(201,168,76,0.15);
+  --glass: rgba(255,255,255,0.02);
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  cursor: none;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+/* CURSOR */
+.cursor { position:fixed; z-index:10000; pointer-events:none; width:8px; height:8px; background:var(--gold); border-radius:50%; transform:translate(-50%,-50%); }
+.cursor-ring { position:fixed; z-index:9999; pointer-events:none; width:36px; height:36px; border:1px solid rgba(201,168,76,0.5); border-radius:50%; transform:translate(-50%,-50%); transition:all 0.18s ease; }
+
+/* PLAYER */
+#player {
+  position:fixed; bottom:32px; right:32px; z-index:1000;
+  width:260px;
+  background:rgba(14,11,13,0.95);
+  backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:18px 20px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.05);
+  transition:transform 0.3s;
+}
+#player:hover { transform:translateY(-2px); }
+.player-label { font-size:0.6rem; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
+.player-song { font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--text); margin-bottom:2px; }
+.player-artist { font-size:0.72rem; color:var(--muted); margin-bottom:14px; }
+.player-bar { height:2px; background:rgba(255,255,255,0.08); border-radius:2px; margin-bottom:14px; overflow:hidden; cursor:pointer; }
+.player-progress { height:100%; background:linear-gradient(90deg,var(--gold),var(--rose2)); width:0%; transition:width 0.5s linear; border-radius:2px; }
+.player-controls { display:flex; align-items:center; justify-content:space-between; }
+.ctrl-btn { background:none; border:none; cursor:none; color:var(--muted); font-size:0.9rem; transition:color 0.2s; padding:4px 8px; }
+.ctrl-btn:hover { color:var(--gold); }
+.ctrl-play { width:36px; height:36px; background:linear-gradient(135deg,var(--gold),var(--rose)); border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:none; color:white; font-size:0.85rem; transition:transform 0.2s,box-shadow 0.2s; box-shadow:0 4px 16px rgba(201,168,76,0.3); }
+.ctrl-play:hover { transform:scale(1.1); box-shadow:0 6px 24px rgba(201,168,76,0.5); }
+.player-visual { display:flex; gap:3px; align-items:flex-end; height:20px; }
+.bar-wave { width:3px; background:var(--gold); border-radius:2px; animation:wave 1s ease-in-out infinite; opacity:0.25; }
+.bar-wave:nth-child(1){animation-delay:0s;} .bar-wave:nth-child(2){animation-delay:0.15s;} .bar-wave:nth-child(3){animation-delay:0.3s;} .bar-wave:nth-child(4){animation-delay:0.45s;}
+.bar-wave.active { opacity:1; }
+@keyframes wave { 0%,100%{height:4px;} 50%{height:18px;} }
+
+/* NAV */
+nav { position:fixed; top:0; width:100%; z-index:500; padding:24px 60px; display:flex; justify-content:space-between; align-items:center; transition:background 0.4s; }
+nav.scrolled { background:rgba(8,6,8,0.95); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+.nav-logo { font-family:'Great Vibes',cursive; font-size:1.8rem; color:var(--gold); }
+.nav-links { display:flex; gap:36px; list-style:none; }
+.nav-links a { font-size:0.65rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color 0.3s; position:relative; }
+.nav-links a::after { content:''; position:absolute; bottom:-4px; left:0; right:0; height:1px; background:var(--gold); transform:scaleX(0); transform-origin:left; transition:transform 0.3s; }
+.nav-links a:hover { color:var(--gold); }
+.nav-links a:hover::after { transform:scaleX(1); }
+
+/* HERO */
+#hero { min-height:100vh; display:grid; grid-template-columns:1fr 1fr; align-items:center; padding:120px 80px 80px; position:relative; overflow:hidden; }
+.hero-ambient { position:absolute; inset:0; pointer-events:none; }
+.amb-circle { position:absolute; border-radius:50%; filter:blur(120px); opacity:0.12; }
+.amb-circle:nth-child(1){ width:600px; height:600px; background:var(--gold); top:-200px; right:-100px; }
+.amb-circle:nth-child(2){ width:400px; height:400px; background:var(--rose); bottom:-100px; left:200px; }
+.hero-left { position:relative; z-index:2; }
+.hero-eyebrow { display:flex; align-items:center; gap:16px; margin-bottom:28px; animation:fadeUp 1s 0.2s both; }
+.eyebrow-line { width:40px; height:1px; background:var(--gold); }
+.eyebrow-text { font-size:0.65rem; letter-spacing:4px; text-transform:uppercase; color:var(--gold); }
+.hero-name { font-family:'Cormorant Garamond',serif; font-size:clamp(3.5rem,7vw,6.5rem); font-weight:300; line-height:0.95; color:var(--text); animation:fadeUp 1s 0.4s both; }
+.hero-name .italic { font-style:italic; color:var(--gold); }
+.hero-name .outline { -webkit-text-stroke:1px rgba(232,201,122,0.5); color:transparent; display:block; }
+.hero-tagline { margin-top:32px; font-size:0.88rem; color:var(--muted); line-height:1.9; max-width:400px; font-weight:300; letter-spacing:0.5px; animation:fadeUp 1s 0.6s both; }
+.hero-actions { margin-top:48px; display:flex; gap:20px; flex-wrap:wrap; animation:fadeUp 1s 0.8s both; }
+.btn-gold { padding:14px 36px; background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--bg); border:none; border-radius:2px; font-family:'Jost',sans-serif; font-size:0.7rem; letter-spacing:3px; text-transform:uppercase; cursor:none; text-decoration:none; transition:box-shadow 0.3s,transform 0.3s; font-weight:500; }
+.btn-gold:hover { box-shadow:0 8px 32px rgba(201,168,76,0.4); transform:translateY(-2px); }
+.btn-ghost { padding:14px 36px; background:transparent; color:var(--text); border:1px solid var(--border); border-radius:2px; font-family:'Jost',sans-serif; font-size:0.7rem; letter-spacing:3px; text-transform:uppercase; cursor:none; text-decoration:none; transition:border-color 0.3s,color 0.3s,transform 0.3s; font-weight:400; }
+.btn-ghost:hover { border-color:var(--gold); color:var(--gold); transform:translateY(-2px); }
+.hero-right { position:relative; z-index:2; display:flex; justify-content:center; align-items:center; animation:fadeIn 1.2s 0.5s both; }
+.hero-portrait { width:360px; height:460px; background:linear-gradient(160deg,#1a1218 0%,#0e0b0d 50%,#14080e 100%); border:1px solid var(--border); border-radius:4px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,0.8),inset 0 1px 0 rgba(201,168,76,0.1); }
+.hero-portrait::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%,rgba(201,168,76,0.08) 0%,transparent 60%); }
+.portrait-emoji { font-size:9rem; position:relative; z-index:1; }
+.portrait-tag { position:absolute; bottom:24px; left:24px; font-family:'Cormorant Garamond',serif; font-size:0.8rem; color:var(--gold); letter-spacing:2px; text-transform:uppercase; }
+.portrait-corner { position:absolute; width:24px; height:24px; border-color:var(--gold); border-style:solid; opacity:0.4; }
+.portrait-corner.tl{top:16px;left:16px;border-width:1px 0 0 1px;} .portrait-corner.tr{top:16px;right:16px;border-width:1px 1px 0 0;} .portrait-corner.bl{bottom:16px;left:16px;border-width:0 0 1px 1px;} .portrait-corner.br{bottom:16px;right:16px;border-width:0 1px 1px 0;}
+.scroll-hint { position:absolute; bottom:40px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:10px; animation:fadeIn 2s 1.5s both; }
+.scroll-hint span { font-size:0.6rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); }
+.scroll-line { width:1px; height:60px; background:linear-gradient(to bottom,var(--gold),transparent); animation:scrollLine 2s ease-in-out infinite; }
+@keyframes scrollLine { 0%{transform:scaleY(0);transform-origin:top;} 50%{transform:scaleY(1);transform-origin:top;} 51%{transform:scaleY(1);transform-origin:bottom;} 100%{transform:scaleY(0);transform-origin:bottom;} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(40px);} to{opacity:1;transform:translateY(0);} }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+/* SECTION */
+section { padding:120px 80px; }
+.s-eyebrow { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+.s-line { width:32px; height:1px; background:var(--gold); }
+.s-label { font-size:0.62rem; letter-spacing:4px; text-transform:uppercase; color:var(--gold); }
+.s-title { font-family:'Cormorant Garamond',serif; font-size:clamp(2.2rem,4vw,3.8rem); font-weight:300; color:var(--text); line-height:1.1; margin-bottom:60px; }
+.s-title em { font-style:italic; color:var(--gold); }
+.divider { width:100%; height:1px; background:linear-gradient(90deg,transparent,var(--border),transparent); }
+
+/* BIODATA */
+#biodata { background:var(--bg2); }
+.bio-layout { display:grid; grid-template-columns:1fr 1.4fr; gap:80px; align-items:start; }
+.bio-card { background:var(--glass); border:1px solid var(--border); border-radius:4px; padding:48px 40px; position:relative; }
+.bio-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+.bio-avatar-box { width:100%; aspect-ratio:3/4; background:linear-gradient(160deg,#1c141a,#100c10); border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:7rem; margin-bottom:28px; position:relative; overflow:hidden; }
+.bio-avatar-box::after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(8,6,8,0.6) 0%,transparent 40%); }
+.bio-name-block { text-align:center; }
+.bio-full-name { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:300; color:var(--text); margin-bottom:6px; }
+.bio-role { font-size:0.62rem; letter-spacing:3px; text-transform:uppercase; color:var(--gold); }
+.bio-details { display:flex; flex-direction:column; }
+.bio-item { display:flex; gap:20px; align-items:flex-start; padding:22px 0; border-bottom:1px solid rgba(255,255,255,0.04); transition:padding-left 0.3s; }
+.bio-item:hover { padding-left:8px; }
+.bio-item:last-child { border-bottom:none; }
+.bio-ico { font-size:1.1rem; margin-top:2px; flex-shrink:0; width:28px; }
+.bio-key { font-size:0.6rem; letter-spacing:2.5px; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+.bio-val { font-size:0.92rem; color:var(--text); font-weight:400; line-height:1.5; }
+
+/* FAMILY */
+#family { background:var(--bg); }
+.family-row { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; }
+.fam-card { border:1px solid var(--border); border-radius:4px; padding:36px 20px; text-align:center; background:var(--glass); position:relative; overflow:hidden; transition:border-color 0.4s,transform 0.4s,box-shadow 0.4s; cursor:default; }
+.fam-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--gold),var(--rose)); transform:scaleX(0); transition:transform 0.4s; }
+.fam-card:hover,.fam-card.me { border-color:rgba(201,168,76,0.4); transform:translateY(-8px); box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+.fam-card:hover::after,.fam-card.me::after { transform:scaleX(1); }
+.fam-emoji { font-size:2.8rem; margin-bottom:18px; display:block; }
+.fam-name { font-family:'Cormorant Garamond',serif; font-size:0.95rem; font-weight:600; color:var(--text); margin-bottom:6px; }
+.fam-role { font-size:0.58rem; letter-spacing:2.5px; text-transform:uppercase; color:var(--gold); }
+
+/* HOBI */
+#hobi { background:var(--bg2); }
+.hobi-layout { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; }
+.hobi-panel { padding:56px 44px; background:var(--bg3); position:relative; overflow:hidden; transition:background 0.4s; cursor:default; }
+.hobi-panel:hover { background:#1a1218; }
+.hobi-panel::before { content:''; position:absolute; top:0; left:0; width:1px; height:100%; background:linear-gradient(to bottom,transparent,var(--gold),transparent); opacity:0; transition:opacity 0.4s; }
+.hobi-panel:hover::before { opacity:1; }
+.hobi-num { font-family:'Cormorant Garamond',serif; font-size:5rem; font-weight:300; color:rgba(201,168,76,0.08); line-height:1; margin-bottom:24px; transition:color 0.4s; }
+.hobi-panel:hover .hobi-num { color:rgba(201,168,76,0.15); }
+.hobi-icon { font-size:2.4rem; margin-bottom:16px; display:block; }
+.hobi-title { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:400; color:var(--text); margin-bottom:14px; }
+.hobi-desc { font-size:0.82rem; color:var(--muted); line-height:1.9; }
+
+/* FUTURE */
+#future { background:var(--bg); }
+.future-layout { display:grid; grid-template-columns:1.2fr 1fr; gap:80px; align-items:center; }
+.future-quote { font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,4vw,3.2rem); font-weight:300; line-height:1.2; color:var(--text); }
+.future-quote em { color:var(--gold); font-style:italic; }
+.future-sub { margin-top:28px; font-size:0.88rem; color:var(--muted); line-height:1.9; }
+.future-visual-panel { background:var(--bg3); border:1px solid var(--border); border-radius:4px; padding:48px; position:relative; overflow:hidden; }
+.future-visual-panel::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+.bank-icon { font-size:5rem; text-align:center; margin-bottom:32px; display:block; animation:goldPulse 3s ease-in-out infinite; }
+@keyframes goldPulse { 0%,100%{filter:drop-shadow(0 0 12px rgba(201,168,76,0.3));} 50%{filter:drop-shadow(0 0 32px rgba(201,168,76,0.7));} }
+.milestones { display:flex; flex-direction:column; gap:20px; }
+.ms { display:flex; gap:16px; align-items:flex-start; padding:18px 20px; border:1px solid rgba(255,255,255,0.04); border-radius:2px; transition:border-color 0.3s,background 0.3s; }
+.ms:hover { border-color:var(--border); background:rgba(201,168,76,0.02); }
+.ms-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0; margin-top:6px; }
+.ms-text { font-size:0.82rem; color:var(--muted); line-height:1.6; }
+.ms-text strong { color:var(--text); display:block; margin-bottom:2px; font-weight:400; }
+
+/* THINGS I LOVE */
+#love { background:var(--bg2); }
+.love-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:rgba(255,255,255,0.04); }
+.love-cell { background:var(--bg2); padding:36px 28px; transition:background 0.3s; cursor:default; }
+.love-cell:hover { background:var(--bg3); }
+.love-cell.wide { grid-column:span 2; }
+.love-cell.tall { grid-row:span 2; display:flex; flex-direction:column; justify-content:flex-end; }
+.love-emoji { font-size:1.8rem; margin-bottom:16px; display:block; }
+.love-emoji-big { font-size:3.5rem; margin-bottom:20px; display:block; }
+.love-cell-title { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:400; color:var(--text); margin-bottom:8px; }
+.love-cell-desc { font-size:0.78rem; color:var(--muted); line-height:1.7; }
+
+/* DAILY */
+#daily { background:var(--bg); }
+.day-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; background:rgba(255,255,255,0.04); }
+.day-panel { background:var(--bg); padding:48px 44px; transition:background 0.4s; }
+.day-panel:hover { background:var(--bg3); }
+.day-time { font-size:0.62rem; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+.day-time::before { content:''; width:24px; height:1px; background:var(--gold); }
+.day-title { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:300; color:var(--text); margin-bottom:16px; }
+.day-desc { font-size:0.82rem; color:var(--muted); line-height:1.9; }
+.day-emoji { font-size:2.5rem; margin-bottom:20px; display:block; }
+
+/* GALLERY */
+#gallery { background:var(--bg2); padding-bottom:60px; }
+.gallery-masonry { display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:220px 280px; gap:12px; }
+.g-item { border-radius:2px; overflow:hidden; position:relative; cursor:none; transition:transform 0.4s; }
+.g-item:hover { transform:scale(1.02); z-index:2; }
+.g-item:nth-child(1){grid-column:1/3;background:linear-gradient(135deg,#1a0e14 0%,#2a1020 100%);}
+.g-item:nth-child(2){grid-column:3;background:linear-gradient(135deg,#100e1a 0%,#1a1428 100%);}
+.g-item:nth-child(3){grid-column:4;background:linear-gradient(135deg,#0e1a10 0%,#142814 100%);}
+.g-item:nth-child(4){grid-column:1;background:linear-gradient(135deg,#1a1a0e 0%,#28280a 100%);}
+.g-item:nth-child(5){grid-column:2/4;background:linear-gradient(135deg,#1a0e0e 0%,#2a0e14 100%);}
+.g-item:nth-child(6){grid-column:4;background:linear-gradient(135deg,#0e1018 0%,#0e1828 100%);}
+.g-inner { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-start; padding:24px; background:linear-gradient(to top,rgba(8,6,8,0.85) 0%,transparent 50%); }
+.g-icon { font-size:3.5rem; position:absolute; top:50%; left:50%; transform:translate(-50%,-70%); }
+.g-label { font-size:0.62rem; letter-spacing:3px; text-transform:uppercase; color:rgba(201,168,76,0.8); }
+.g-title { font-family:'Cormorant Garamond',serif; font-size:1.1rem; color:var(--text); margin-top:4px; }
+
+/* FOOTER */
+footer { background:var(--bg); border-top:1px solid var(--border); padding:80px 80px 48px; display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:end; }
+.footer-name { font-family:'Great Vibes',cursive; font-size:3.5rem; color:var(--gold); display:block; margin-bottom:12px; }
+.footer-tagline { font-size:0.78rem; color:var(--muted); line-height:1.8; max-width:320px; }
+.footer-bottom { grid-column:1/-1; padding-top:40px; border-top:1px solid rgba(255,255,255,0.04); display:flex; justify-content:space-between; font-size:0.65rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+.footer-links { display:flex; flex-direction:column; gap:14px; align-items:flex-end; }
+.footer-links a { font-size:0.65rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color 0.3s; }
+.footer-links a:hover { color:var(--gold); }
+
+/* REVEAL */
+.reveal { opacity:0; transform:translateY(32px); transition:opacity 0.8s ease,transform 0.8s ease; }
+.reveal.visible { opacity:1; transform:translateY(0); }
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  section{padding:80px 32px;} nav{padding:20px 24px;} #hero{grid-template-columns:1fr;padding:100px 32px 60px;} .hero-right{display:none;} .bio-layout{grid-template-columns:1fr;} .family-row{grid-template-columns:repeat(2,1fr);} .hobi-layout{grid-template-columns:1fr;gap:2px;} .future-layout{grid-template-columns:1fr;} .love-grid{grid-template-columns:1fr 1fr;} .love-cell.wide{grid-column:span 2;} .day-grid{grid-template-columns:1fr;} .gallery-masonry{grid-template-columns:1fr 1fr;grid-template-rows:auto;} .g-item{grid-column:auto!important;min-height:180px;} footer{grid-template-columns:1fr;} .footer-links{align-items:flex-start;} .footer-bottom{flex-direction:column;gap:12px;} .nav-links{display:none;} #player{width:220px;bottom:16px;right:16px;}
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- MUSIC PLAYER -->
+<div id="player">
+  <div class="player-label">♪ Now Playing</div>
+  <div class="player-song" id="songName">Lofi Chill Vibes</div>
+  <div class="player-artist" id="songArtist">Fayla's Playlist ✦</div>
+  <div class="player-bar" id="playerBar">
+    <div class="player-progress" id="progress"></div>
+  </div>
+  <div class="player-controls">
+    <button class="ctrl-btn" onclick="prevSong()">⏮</button>
+    <button class="ctrl-play" id="playBtn" onclick="togglePlay()">▶</button>
+    <button class="ctrl-btn" onclick="nextSong()">⏭</button>
+    <div class="player-visual">
+      <div class="bar-wave"></div><div class="bar-wave"></div>
+      <div class="bar-wave"></div><div class="bar-wave"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">Fayla</div>
+  <ul class="nav-links">
+    <li><a href="#biodata">Biodata</a></li>
+    <li><a href="#family">Family</a></li>
+    <li><a href="#hobi">Hobi</a></li>
+    <li><a href="#future">Future</a></li>
+    <li><a href="#love">I Love</a></li>
+    <li><a href="#daily">Daily</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-ambient">
+    <div class="amb-circle"></div>
+    <div class="amb-circle"></div>
+  </div>
+  <div class="hero-left">
+    <div class="hero-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">Welcome to My Universe</span>
+    </div>
+    <h1 class="hero-name">
+      Fayla<br>
+      <span class="italic">Syifa</span><br>
+      <span class="outline">Rustam</span>
+    </h1>
+    <p class="hero-tagline">Seorang jiwa yang mencintai keindahan dalam setiap hal kecil — dari melodi musik hingga aroma kue yang baru matang.</p>
+    <div class="hero-actions">
+      <a href="#biodata" class="btn-gold">Kenalkan Aku</a>
+      <a href="#gallery" class="btn-ghost">Lihat Gallery</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-portrait">
+      <div class="portrait-corner tl"></div>
+      <div class="portrait-corner tr"></div>
+      <div class="portrait-corner bl"></div>
+      <div class="portrait-corner br"></div>
+      <span class="portrait-emoji">🌹</span>
+      <span class="portrait-tag">F.S.R — 2024</span>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- BIODATA -->
+<section id="biodata">
+  <div class="s-eyebrow"><div class="s-line"></div><span class="s-label">About Me</span></div>
+  <h2 class="s-title">Siapa <em>Aku?</em></h2>
+  <div class="bio-layout">
+    <div class="bio-card reveal">
+      <div class="bio-avatar-box">🌹</div>
+      <div class="bio-name-block">
+        <div class="bio-full-name">Fayla Syifa Rustam</div>
+        <div class="bio-role">The Girl Behind This Page</div>
+      </div>
+    </div>
+    <div class="bio-details reveal">
+      <div class="bio-item"><span class="bio-ico">👤</span><div><div class="bio-key">Nama Lengkap</div><div class="bio-val">Fayla Syifa Rustam</div></div></div>
+      <div class="bio-item"><span class="bio-ico">🏠</span><div><div class="bio-key">Nama Keluarga</div><div class="bio-val">Rustam</div></div></div>
+      <div class="bio-item"><span class="bio-ico">🌏</span><div><div class="bio-key">Asal</div><div class="bio-val">Indonesia 🇮🇩</div></div></div>
+      <div class="bio-item"><span class="bio-ico">🎬</span><div><div class="bio-key">Hobi Favorit</div><div class="bio-val">Nonton Film · Dengar Musik · Buat Kue</div></div></div>
+      <div class="bio-item"><span class="bio-ico">🏦</span><div><div class="bio-key">Cita-cita</div><div class="bio-val">Bekerja di Dunia Perbankan</div></div></div>
+      <div class="bio-item"><span class="bio-ico">✨</span><div><div class="bio-key">Motto</div><div class="bio-val">"Jadilah cahaya di manapun kamu berada"</div></div></div>
+      <div class="bio-item"><span class="bio-ico">💛</span><div><div class="bio-key">Hal Terpenting</div><div class="bio-val">Keluarga, Mimpi, dan Kebaikan Hati</div></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FAMILY -->
+<section id="family">
+  <div class="s-eyebrow"><div class="s-line"></div><span class="s-label">My Family</span></div>
+  <h2 class="s-title">Keluarga <em>Tercinta</em></h2>
+  <div class="family-row">
+    <div class="fam-card reveal"><span class="fam-emoji">👨‍💼</span><div class="fam-name">Rustam Effendi</div><div class="fam-role">Papa</div></div>
+    <div class="fam-card reveal"><span class="fam-emoji">👩‍💼</span><div class="fam-name">Faradina</div><div class="fam-role">Mama</div></div>
+    <div class="fam-card me reveal"><span class="fam-emoji">🌹</span><div class="fam-name">Fayla Syifa</div><div class="fam-role">Me ✦</div></div>
+    <div class="fam-card reveal"><span class="fam-emoji">👧</span><div class="fam-name">Fayza</div><div class="fam-role">Adik</div></div>
+    <div class="fam-card reveal"><span class="fam-emoji">👫</span><div class="fam-name">Kk Fava & Bang Fandi</div><div class="fam-role">Kakak</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HOBI -->
+<section id="hobi">
+  <div class="s-eyebrow"><div class="s-line"></div><span class="s-label">Hobi</span></div>
+  <h2 class="s-title">Yang Aku <em>Gemari</em></h2>
+  <div class="hobi-layout">
+    <div class="hobi-panel reveal">
+      <div class="hobi-num">01</div>
+      <span class="hobi-icon">🎬</span>
+      <div class="hobi-title">Menonton Film</div>
+      <p class="hobi-desc">Film adalah jendela ke dunia lain. Dari drama yang menyentuh hati hingga petualangan yang memacu adrenalin — semuanya adalah petualangan baru bagiku.</p>
+    </div>
+    <div class="hobi-panel reveal">
+      <div class="hobi-num">02</div>
+      <span class="hobi-icon">🎵</span>
+      <div class="hobi-title">Dengar Musik</div>
+      <p class="hobi-desc">Musik adalah bahasa jiwa. Setiap melodi punya ceritanya sendiri, dan aku suka tenggelam dalam setiap not yang berbicara langsung ke hati.</p>
+    </div>
+    <div class="hobi-panel reveal">
+      <div class="hobi-num">03</div>
+      <span class="hobi-icon">🧁</span>
+      <div class="hobi-title">Membuat Kue</div>
+      <p class="hobi-desc">Baking adalah meditasiku. Ada keajaiban dalam mengubah tepung, telur, dan gula menjadi sesuatu yang indah dan lezat — itu adalah seni.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FUTURE -->
+<section id="future">
+  <div class="s-eyebrow"><div class="s-line"></div><span class="s-label">My Future</span></div>
+  <div class="future-layout">
+    <div class="reveal">
+      <p class="future-quote">Suatu hari, aku akan berdiri di balik <em>meja bank</em> dengan bangga dan penuh dedikasi.</p>
+      <p class="future-sub">Dunia perbankan menarikku bukan hanya karena prestise-nya, tapi karena aku percaya bahwa uang yang dikelola dengan bijak bisa mengubah kehidupan orang. Aku ingin menjadi bagian dari perubahan itu.</p>
+    </div>
+    <div class="future-visual-panel reveal">
+      <span class="bank-icon">🏦</span>
+      <div class="milestones">
+        <div class="ms"><div class="ms-dot"></div><div class="ms-text"><strong>Terus Belajar</strong>Mendalami ilmu keuangan, akuntansi, dan ekonomi perbankan.</div></div>
+        <div class="ms"><div class="ms-dot"></div><div class="ms-text"><strong>Bangun Skill</strong>Mengembangkan diri dengan pengalaman dan kemampuan relevan.</div></div>
+        <div class="ms"><div class="ms-dot"></div><div class="ms-text"><strong>Wujudkan Impian</strong>Bekerja di bank impian dan menjadi profesional terbaik.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- LOVE -->
+<section id="love">
+  <div class="s-eyebrow"><div class="s-line"></div><span class="s-label">Things I Love</span></div>
+  <h2 class="s-title">Hal yang Aku <em>Cintai</em></h2>
+  <div class="love-grid">
+    <div class="love-cell wide tall reveal">
+      <span class="love-emoji-big">👨‍👩‍👧‍👦</span>
+      <div class="love-cell-title">Keluarga</div>
+      <p class="love-cell-desc">Mereka adalah alasanku tersenyum dan terus berjuang. Papa, Mama, Kk Fava, Bang Fandi, dan Adik Fayza — kalian segalanya.</p>
+    </div>
+    <div class="love-cell reveal"><span class="love-emoji">🎬</span><div class="love-cell-title">Film & Series</div><p class="love-cell-desc">Cerita yang bagus selalu meninggalkan jejak di hati.</p></div>
+    <div class="love-cell reveal"><span class="love-emoji">🎶</span><div class="love-cell-title">Musik</div><p class="love-cell-desc">Earphone in — dunia aku sendiri.</p></div>
+    <div class="love-cell reveal"><span class="love-emoji">🧁</span><div class="love-cell-title">Baking</div><p class="love-cell-desc">Hasil kue buatan sendiri selalu terasa lebih istimewa.</p></div>
+    <div class="love-cell reveal"><span class="love-emoji">🌹</span><div class="love-cell-title">Bunga & Keindahan</div><p class="love-cell-desc">Keindahan alam selalu menenangkan jiwa.</p></div>
+    <div class="love-cell reveal"><span class="love-emoji">☕</span><div class="love-cell-title">Minuman Hangat</div><p class="love-cell-desc">Teh manis di pagi hari — ritual wajib.</p></div>
+    <div class="love-cell wide reveal"><span class="love-emoji">✨</span><div class="love-cell-title">Momen Berharga</div><p class="love-cell-desc">Setiap detik bersama orang tersayang adalah harta tak ternilai yang selalu kusyukuri.</p></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DAILY -->
+<section id="daily">
+  <div class="s-eyebrow"><div class="s-line"></div><span class="s-label">Daily Life</span></div>
+  <h2 class="s-title">Kegiatan <em>Sehari-hari</em></h2>
+  <div class="day-grid">
+    <div class="day-panel reveal"><span class="day-emoji">🌅</span><div class="day-time">Pagi Hari</div><div class="day-title">Bangun & Mulai Hari</div><p class="day-desc">Bangun pagi, sholat Subuh, cuci muka segar, dan sarapan. Memulai hari dengan niat baik adalah energi terbaik untuk hari yang produktif.</p></div>
+    <div class="day-panel reveal"><span class="day-emoji">📚</span><div class="day-time">Siang Hari</div><div class="day-title">Belajar & Beraktivitas</div><p class="day-desc">Waktu paling produktif — belajar, mengerjakan tugas, dan membantu kegiatan di rumah. Setiap ilmu baru adalah investasi untuk masa depan.</p></div>
+    <div class="day-panel reveal"><span class="day-emoji">🎵</span><div class="day-time">Sore Hari</div><div class="day-title">Me Time & Hobi</div><p class="day-desc">Saatnya aku! Musik diputar, film ditonton, atau kue dibuat sambil menikmati sore yang hangat. Ini waktu untuk mengisi ulang energi jiwa.</p></div>
+    <div class="day-panel reveal"><span class="day-emoji">🌙</span><div class="day-time">Malam Hari</div><div class="day-title">Bersama Keluarga</div><p class="day-desc">Makan malam bersama, cerita bareng keluarga, refleksi hari ini, lalu istirahat dengan hati penuh syukur. Malam adalah hadiah paling indah.</p></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <div class="s-eyebrow"><div class="s-line"></div><span class="s-label">Gallery</span></div>
+  <h2 class="s-title">Momen <em>Indah</em></h2>
+  <div class="gallery-masonry">
+    <div class="g-item reveal"><span class="g-icon">🎬</span><div class="g-inner"><div class="g-label">Hobi</div><div class="g-title">Movie Nights</div></div></div>
+    <div class="g-item reveal"><span class="g-icon">🌹</span><div class="g-inner"><div class="g-label">Identitas</div><div class="g-title">Fayla's World</div></div></div>
+    <div class="g-item reveal"><span class="g-icon">🧁</span><div class="g-inner"><div class="g-label">Kreasi</div><div class="g-title">Baking Session</div></div></div>
+    <div class="g-item reveal"><span class="g-icon">👨‍👩‍👧</span><div class="g-inner"><div class="g-label">Keluarga</div><div class="g-title">Family Love</div></div></div>
+    <div class="g-item reveal"><span class="g-icon">🎵</span><div class="g-inner"><div class="g-label">Musik</div><div class="g-title">Music is Life</div></div></div>
+    <div class="g-item reveal"><span class="g-icon">🏦</span><div class="g-inner"><div class="g-label">Mimpi</div><div class="g-title">The Future</div></div></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <span class="footer-name">Fayla</span>
+    <p class="footer-tagline">Setiap mimpi besar dimulai dari langkah kecil yang dilakukan dengan sepenuh hati.</p>
+  </div>
+  <div class="footer-links">
+    <a href="#biodata">Biodata</a>
+    <a href="#family">Family</a>
+    <a href="#hobi">Hobi</a>
+    <a href="#future">Future</a>
+    <a href="#gallery">Gallery</a>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2024 Fayla Syifa Rustam</span>
+    <span>Made with ♥ & Gold</span>
+  </div>
+</footer>
+
+<script>
+// CURSOR
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+  setTimeout(() => { ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px'; }, 60);
+});
+document.querySelectorAll('a,button,.fam-card,.hobi-panel,.love-cell,.day-panel,.g-item').forEach(el => {
+  el.addEventListener('mouseenter', () => ring.style.transform = 'translate(-50%,-50%) scale(1.8)');
+  el.addEventListener('mouseleave', () => ring.style.transform = 'translate(-50%,-50%) scale(1)');
+});
+
+// NAV
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// REVEAL
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); }});
+}, {threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// MUSIC PLAYER
+const songs = [
+  {name:"Lofi Chill Vibes", artist:"Fayla's Playlist ✦"},
+  {name:"Late Night Jazz", artist:"Fayla's Playlist ✦"},
+  {name:"Aesthetic Beats", artist:"Fayla's Playlist ✦"},
+  {name:"Golden Hour", artist:"Fayla's Playlist ✦"},
+  {name:"Soft Piano Rain", artist:"Fayla's Playlist ✦"},
+];
+let current = 0, playing = false, progVal = 0, progInterval = null;
+
+function updateSong(){
+  document.getElementById('songName').textContent = songs[current].name;
+  document.getElementById('songArtist').textContent = songs[current].artist;
+  progVal = 0; document.getElementById('progress').style.width = '0%';
+}
+function startProgress(){
+  clearInterval(progInterval);
+  progInterval = setInterval(() => {
+    progVal += 0.08;
+    if(progVal >= 100){ nextSong(); return; }
+    document.getElementById('progress').style.width = progVal + '%';
+  }, 50);
+}
+function togglePlay(){
+  playing = !playing;
+  document.getElementById('playBtn').textContent = playing ? '⏸' : '▶';
+  document.querySelectorAll('.bar-wave').forEach(w => w.classList.toggle('active', playing));
+  if(playing) startProgress(); else clearInterval(progInterval);
+}
+function nextSong(){
+  current = (current + 1) % songs.length; updateSong();
+  if(playing) startProgress();
+}
+function prevSong(){
+  current = (current - 1 + songs.length) % songs.length; updateSong();
+}
+document.getElementById('playerBar').addEventListener('click', function(e){
+  const rect = this.getBoundingClientRect();
+  progVal = ((e.clientX - rect.left) / rect.width) * 100;
+  document.getElementById('progress').style.width = progVal + '%';
+});
+</script>
+</body>
+</html>
